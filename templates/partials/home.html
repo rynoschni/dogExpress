@@ -1,0 +1,9 @@
+<h1>My Dog App</h1>
+
+<h2>Choose your dog breed:</h2>
+
+<ul>
+  ${dogs.map(dog =>
+  `<li><a href="${path}/${dog.breed}">${dog.breed}</a></li>`
+  ).join('')}
+</ul>
