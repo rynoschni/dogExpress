@@ -8,12 +8,14 @@ const port = 3333;
 const express = require("express");
 const app = express();
 
-const morgan = require('morgan');
-const logger = morgan('tiny');
+const fetch = require("node-fetch");
+
+const morgan = require("morgan");
+const logger = morgan("tiny");
 app.use(logger);
 
-const helmet = require("helmet");
-app.use(helmet());
+// const helmet = require("helmet");
+// app.use(helmet());
 
 const es6Renderer = require("express-es6-template-engine");
 
@@ -25,46 +27,82 @@ const server = http.createServer(app);
 
 const db = require("./db");
 
-server.listen(port, hostname, () => {
-  console.log(`YO JOE!  Coming in hot on http://${hostname}:${port}`);
-});
-
-app.all('*', (req, res, next) => {
-  console.log("I'm SnakeEyes, sneaking in the middle.");
-  next();
-});
+// app.all("*", (req, res, next) => {
+//   console.log("I'm SnakeEyes, sneaking in the middle.");
+//   next();
+// });
 
 app.get("/", (req, res) => {
+  console.log("Req Path", req.path);
   res.render("index", {
     locals: {
       dogs: db,
       path: req.path,
-      title: "My Address App",
+      title: "My Dog App",
     },
     partials: {
       head: "/partials/head",
-      home: "/partials/home",
+      partial: "/partials/home",
     },
   });
 });
 
-app.get("/friends/:name", (req, res) => {
-  console.log(req.params.name);
-  var { name } = req.params;
+app.get("/:slug", async (req, res) => {
+  console.log(req.params.slug);
+  const { slug } = req.params;
 
-  var friend = db.find((thisFriend) => thisFriend.name === name);
+  let dog = db.find((singleDog) => singleDog.slug === slug);
 
-  if (friend) {
-    res.render("friend", {
-      locals: {
-        friend,
-        title: "My Friend",
-      },
-      partials: {
-        head: "/partials/head",
-      },
-    });
+  if (dog) {
+
+    if (dog.apiSubBreed === null) {
+      let url = `https://dog.ceo/api/breed/${dog.apiBreed}/images/random`
+      console.log(url);
+
+      const img = await fetch(url)
+        .then((res) => res.json())
+        .then((data) => data);
+      console.log("dog data:", img);
+
+      res.render("index", {
+        locals: {
+          dog,
+          title: "My Dog",
+          img,
+        },
+        partials: {
+          head: "/partials/head",
+          partial: "/partials/dog",
+        },
+      });
+    } else {
+      let url = `https://dog.ceo/api/breed/${dog.apiBreed}/${dog.apiSubBreed}/images/random`
+      console.log(url);
+
+      const img = await fetch(url)
+        .then((res) => res.json())
+        .then((data) => data);
+      console.log("dog data:", img);
+
+      res.render("index", {
+        locals: {
+          dog,
+          title: "My Dog",
+          img,
+        },
+        partials: {
+          head: "/partials/head",
+          partial: "/partials/dog",
+        },
+      });
+    }
+
+    
   } else {
     res.send("Sargent Slaughter says NOOOO!").status(404);
   }
+});
+
+server.listen(port, hostname, () => {
+  console.log(`YO JOE!  Coming in hot on http://${hostname}:${port}`);
 });

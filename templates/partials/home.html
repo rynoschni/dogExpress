@@ -4,6 +4,6 @@
 
 <ul>
   ${dogs.map(dog =>
-  `<li><a href="${path}/${dog.breed}">${dog.breed}</a></li>`
+  `<li><a href="/${dog.slug}">${dog.breed}</a></li>`
   ).join('')}
 </ul>
